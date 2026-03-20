@@ -6,7 +6,7 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { CheckCircle, Download, Loader2 } from "lucide-react";
+import { CheckCircle, Download, Loader2, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ function PortfolioPage() {
   const revealRefs = useRef<NodeListOf<Element> | null>(null);
   const { actor } = useActor();
   const submitMutation = useSubmitContactMessage();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -57,6 +58,19 @@ function PortfolioPage() {
     return () => observer.disconnect();
   }, []);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".portfolio-nav")) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [menuOpen]);
+
   const handleProjectMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -87,6 +101,14 @@ function PortfolioPage() {
     }
   };
 
+  const navLinks = [
+    { href: "#about", label: "About" },
+    { href: "#experience", label: "Experience" },
+    { href: "#skills", label: "Skills" },
+    { href: "#projects", label: "Projects" },
+    { href: "#contact", label: "Contact" },
+  ];
+
   return (
     <>
       {/* Nav */}
@@ -95,46 +117,47 @@ function PortfolioPage() {
           R<span>R</span>K
         </div>
         <ul className="nav-links">
-          <li>
-            <a href="#about" data-ocid="nav.link">
-              About
-            </a>
-          </li>
-          <li>
-            <a href="#experience" data-ocid="nav.link">
-              Experience
-            </a>
-          </li>
-          <li>
-            <a href="#skills" data-ocid="nav.link">
-              Skills
-            </a>
-          </li>
-          <li>
-            <a href="#projects" data-ocid="nav.link">
-              Projects
-            </a>
-          </li>
-          <li>
-            <a href="#contact" data-ocid="nav.link">
-              Contact
-            </a>
-          </li>
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <a href={link.href} data-ocid="nav.link">
+                {link.label}
+              </a>
+            </li>
+          ))}
         </ul>
+        {/* Hamburger button */}
+        <button
+          type="button"
+          className={`nav-hamburger${menuOpen ? " open" : ""}`}
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          data-ocid="nav.toggle"
+        >
+          {menuOpen ? (
+            <X size={22} color="var(--p-text)" />
+          ) : (
+            <Menu size={22} color="var(--p-text)" />
+          )}
+        </button>
+
+        {/* Mobile nav overlay */}
+        <div className={`nav-mobile-menu${menuOpen ? " open" : ""}`}>
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              data-ocid="nav.link"
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
       </nav>
 
       {/* Hero */}
-      <section
-        id="hero"
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "120px 60px 80px",
-          position: "relative",
-        }}
-      >
+      <section id="hero" className="section-pad hero-section">
         <div className="hero-glow" />
         <div className="hero-glow2" />
 
@@ -168,6 +191,8 @@ function PortfolioPage() {
           <a
             href="/assets/uploads/ROHAN-RAJ-KAPOOR-FULLSTACK-1-1.pdf"
             download
+            target="_blank"
+            rel="noreferrer"
             className="btn btn-download"
             data-ocid="hero.download_button"
             style={{
@@ -253,12 +278,8 @@ function PortfolioPage() {
       {/* About */}
       <section
         id="about"
-        style={{
-          padding: "120px 60px",
-          maxWidth: "1300px",
-          margin: "0 auto",
-          position: "relative",
-        }}
+        className="section-pad section-inner"
+        style={{ position: "relative" }}
       >
         <div className="section-label">{"01 // Initialization"}</div>
         <h2 className="section-title reveal">Professional Outline</h2>
@@ -297,14 +318,7 @@ function PortfolioPage() {
           borderBottom: "1px solid var(--p-border)",
         }}
       >
-        <div
-          className="experience-inner"
-          style={{
-            maxWidth: "1300px",
-            margin: "0 auto",
-            padding: "120px 60px",
-          }}
-        >
+        <div className="experience-inner section-pad section-inner">
           <div className="section-label">{"02 // System Logs"}</div>
           <h2 className="section-title reveal">Experience</h2>
           <div className="timeline reveal">
@@ -340,22 +354,12 @@ function PortfolioPage() {
       {/* Skills */}
       <section
         id="skills"
-        style={{
-          padding: "120px 60px",
-          maxWidth: "1300px",
-          margin: "0 auto",
-          position: "relative",
-        }}
+        className="section-pad section-inner"
+        style={{ position: "relative" }}
       >
         <div className="section-label">{"03 // Technical Arsenal"}</div>
         <h2 className="section-title reveal">Core Capabilities</h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "24px",
-          }}
-        >
+        <div className="skills-grid">
           {[
             {
               icon: "⌨️",
@@ -446,24 +450,10 @@ function PortfolioPage() {
           borderTop: "1px solid var(--p-border)",
         }}
       >
-        <div
-          className="projects-inner"
-          style={{
-            maxWidth: "1300px",
-            margin: "0 auto",
-            padding: "120px 60px",
-          }}
-        >
+        <div className="projects-inner section-pad section-inner">
           <div className="section-label">{"04 // Executable Outputs"}</div>
           <h2 className="section-title reveal">Featured Projects</h2>
-          <div
-            className="projects-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))",
-              gap: "32px",
-            }}
-          >
+          <div className="projects-grid-layout">
             <div
               className="project-card reveal"
               onMouseMove={handleProjectMouseMove}
@@ -540,12 +530,8 @@ function PortfolioPage() {
       {/* Services */}
       <section
         id="services"
-        style={{
-          padding: "120px 60px",
-          maxWidth: "1300px",
-          margin: "0 auto",
-          position: "relative",
-        }}
+        className="section-pad section-inner"
+        style={{ position: "relative" }}
       >
         <div className="section-label">{"05 // Value Proposition"}</div>
         <h2 className="section-title reveal">What I Deliver</h2>
@@ -622,12 +608,8 @@ function PortfolioPage() {
       {/* Contact */}
       <section
         id="contact"
-        style={{
-          padding: "120px 60px",
-          maxWidth: "1300px",
-          margin: "0 auto",
-          position: "relative",
-        }}
+        className="section-pad section-inner"
+        style={{ position: "relative" }}
       >
         <div className="section-label">{"06 // Communication Protocols"}</div>
         <h2 className="section-title reveal">Establish Connection</h2>
@@ -657,14 +639,7 @@ function PortfolioPage() {
               open. Let&apos;s build something scalable.
             </p>
           </div>
-          <div
-            className="contact-links reveal"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "20px",
-            }}
-          >
+          <div className="contact-links contact-links-grid reveal">
             <a
               href="mailto:official.rohanraj17@gmail.com"
               className="contact-link"
@@ -721,6 +696,7 @@ function PortfolioPage() {
         {/* Contact Form */}
         <div className="reveal">
           <div
+            className="contact-form-card"
             style={{
               background: "var(--surface)",
               border: "1px solid var(--p-border)",
@@ -809,14 +785,7 @@ function PortfolioPage() {
                   onSubmit={handleFormSubmit}
                   data-ocid="contact.panel"
                 >
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "20px",
-                      marginBottom: "20px",
-                    }}
-                  >
+                  <div className="form-row">
                     <div>
                       <label className="form-label" htmlFor="contact-name">
                         Name
